@@ -1,0 +1,24 @@
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP Parse error:  syntax error, unexpected '}' in /home/ubuntu/workspace/microposts/app/Http/routes.php on line 17
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP Stack trace:
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   1. {main}() /home/ubuntu/workspace/microposts/server.php:0
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   2. require_once() /home/ubuntu/workspace/microposts/server.php:21
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   3. Illuminate\Foundation\Http\Kernel->handle() /home/ubuntu/workspace/microposts/public/index.php:54
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   4. Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:87
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   5. Illuminate\Foundation\Http\Kernel->bootstrap() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:117
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   6. Illuminate\Foundation\Application->bootstrapWith() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:222
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   7. Illuminate\Foundation\Bootstrap\BootProviders->bootstrap() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:203
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   8. Illuminate\Foundation\Application->boot() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/BootProviders.php:17
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP   9. array_walk() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:718
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  10. Illuminate\Foundation\Application->Illuminate\Foundation\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:718
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  11. Illuminate\Foundation\Application->bootProvider() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:717
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  12. Illuminate\Container\Container->call() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:734
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  13. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:507}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:507
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  14. App\Providers\RouteServiceProvider->boot() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:507
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  15. Illuminate\Foundation\Support\Providers\RouteServiceProvider->boot() /home/ubuntu/workspace/microposts/app/Providers/RouteServiceProvider.php:29
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  16. Illuminate\Foundation\Support\Providers\RouteServiceProvider->loadRoutes() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Support/Providers/RouteServiceProvider.php:31
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  17. Illuminate\Container\Container->call() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Support/Providers/RouteServiceProvider.php:72
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  18. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:507}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:507
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  19. App\Providers\RouteServiceProvider->map() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:507
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  20. Illuminate\Routing\Router->group() /home/ubuntu/workspace/microposts/app/Providers/RouteServiceProvider.php:42
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  21. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:354}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:354
+[26-Aug-2017 17:32:04 Asia/tokyo] PHP  22. App\Providers\RouteServiceProvider->App\Providers\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:354
