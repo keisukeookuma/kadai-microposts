@@ -1,0 +1,454 @@
+[1mdiff --git a/app/Http/Controllers/Controller.php b/app/Http/Controllers/Controller.php[m
+[1mindex 4eb37d5..ebefd32 100644[m
+[1m--- a/app/Http/Controllers/Controller.php[m
+[1m+++ b/app/Http/Controllers/Controller.php[m
+[36m@@ -10,4 +10,12 @@[m [muse Illuminate\Foundation\Auth\Access\AuthorizesRequests;[m
+ abstract class Controller extends BaseController[m
+ {[m
+     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;[m
+[32m+[m[41m    [m
+[32m+[m[32m    public function counts($user) {[m
+[32m+[m[32m        $count_microposts = $user->microposts()->count();[m
+[32m+[m[41m        [m
+[32m+[m[32m        return [[m
+[32m+[m[32m            'count_microposts' => $count_microposts,[m
+[32m+[m[32m        ];[m
+[32m+[m[32m    }[m
+ }[m
+[1mdiff --git a/app/Http/Controllers/UsersController.php b/app/Http/Controllers/UsersController.php[m
+[1mindex 540059a..08dd2ac 100644[m
+[1m--- a/app/Http/Controllers/UsersController.php[m
+[1m+++ b/app/Http/Controllers/UsersController.php[m
+[36m@@ -25,9 +25,16 @@[m [mclass UsersController extends Controller[m
+     public function show($id)[m
+     {[m
+         $user = User::find($id);[m
+[32m+[m[32m        $microposts = $user->microposts()->orderBy('created_at', 'desc')->paginate(10);[m
+[32m+[m[32m        $count_microposts = $user->microposts()->count();[m
+         [m
+[31m-        return view('users.show', [[m
+[32m+[m[32m        $data = [[m
+             'user' => $user,[m
+[31m-        ]);[m
+[32m+[m[32m            'microposts' => $microposts,[m
+[32m+[m[32m        ];[m
+[32m+[m[41m        [m
+[32m+[m[32m        $data += $this->counts($user);[m
+[32m+[m[41m        [m
+[32m+[m[32m        return view('users.show', $data);[m
+     }[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/app/Http/routes.php b/app/Http/routes.php[m
+[1mindex 488497f..106ee20 100644[m
+[1m--- a/app/Http/routes.php[m
+[1m+++ b/app/Http/routes.php[m
+[36m@@ -10,9 +10,7 @@[m
+ | and give it the controller to call when that URI is requested.[m
+ |[m
+ */[m
+[31m-Route::get('/', function(){[m
+[31m-    return view('welcome');[m
+[31m-});[m
+[32m+[m[32mRoute::get('/', 'WelcomeController@index');[m
+ [m
+ //ユーザ登録[m
+ Route::get('signup', 'Auth\AuthController@getRegister')->name('signup.get');[m
+[36m@@ -26,6 +24,7 @@[m [mRoute::get('logout', 'Auth\AuthController@getLogout')->name('logout.get');[m
+ //追加[m
+ Route::group(['middleware' => 'auth'], function () {[m
+     Route::resource('users', 'UsersController', ['only' => ['index','show']]);[m
+[32m+[m[32m    Route::resource('microposts', 'MicropostsController', ['only' => ['store','destroy']]);[m
+ });[m
+ [m
+ [m
+[1mdiff --git a/app/User.php b/app/User.php[m
+[1mindex 9f1e748..3f9d475 100644[m
+[1m--- a/app/User.php[m
+[1m+++ b/app/User.php[m
+[36m@@ -36,4 +36,11 @@[m [mclass User extends Model implements AuthenticatableContract,[m
+      * @var array[m
+      */[m
+     protected $hidden = ['password', 'remember_token'];[m
+[32m+[m
+[32m+[m[32m    public function microposts()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        return $this->hasMany(Micropost::class);[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+ }[m
+[41m+[m
+[1mdiff --git a/php_errors.log b/php_errors.log[m
+[1mindex dc8ee29..07cdec2 100644[m
+[1m--- a/php_errors.log[m
+[1m+++ b/php_errors.log[m
+[36m@@ -130,3 +130,308 @@[m
+ [29-Aug-2017 23:14:28 Asia/tokyo] PHP  47. spl_autoload_call() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+ [29-Aug-2017 23:14:28 Asia/tokyo] PHP  48. Composer\Autoload\ClassLoader->loadClass() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+ [29-Aug-2017 23:14:28 Asia/tokyo] PHP  49. Composer\Autoload\includeFile() /home/ubuntu/workspace/microposts/vendor/composer/ClassLoader.php:322[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP Parse error:  syntax error, unexpected end of file in /home/ubuntu/workspace/microposts/storage/framework/views/1dda10752b13a710372f4a485f21660f on line 42[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP Stack trace:[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   1. {main}() /home/ubuntu/workspace/microposts/server.php:0[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   2. require_once() /home/ubuntu/workspace/microposts/server.php:21[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   3. Illuminate\Foundation\Http\Kernel->handle() /home/ubuntu/workspace/microposts/public/index.php:54[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   4. Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:87[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   5. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:122[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   6. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   7. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   8. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP   9. Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  10. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/CheckForMaintenanceMode.php:44[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  11. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  12. Illuminate\Cookie\Middleware\EncryptCookies->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  13. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php:59[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  14. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  15. Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  16. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php:37[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  17. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  18. Illuminate\Session\Middleware\StartSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  19. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:62[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  20. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  21. Illuminate\View\Middleware\ShareErrorsFromSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  22. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php:49[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  23. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  24. Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  25. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php:50[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  26. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  27. Illuminate\Foundation\Http\Kernel->Illuminate\Foundation\Http\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  28. Illuminate\Routing\Router->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:236[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  29. Illuminate\Routing\Router->dispatchToRoute() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:635[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  30. Illuminate\Routing\Router->runRouteWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:675[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  31. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:710[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  32. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  33. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  34. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  35. Illuminate\Routing\Router->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  36. Illuminate\Routing\Route->run() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:708[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  37. Illuminate\Routing\Route->runWithCustomDispatcher() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:134[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  38. Illuminate\Routing\ControllerDispatcher->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:203[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  39. Illuminate\Routing\ControllerDispatcher->callWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:69[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  40. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:114[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  41. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  42. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  43. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  44. Illuminate\Routing\ControllerDispatcher->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  45. Illuminate\Routing\Router->prepareResponse() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:113[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  46. Symfony\Component\HttpFoundation\Response->__construct() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:1229[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  47. Illuminate\Http\Response->setContent() /home/ubuntu/workspace/microposts/vendor/symfony/http-foundation/Response.php:202[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  48. Illuminate\View\View->render() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Http/Response.php:51[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  49. Illuminate\View\View->renderContents() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/View.php:83[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  50. Illuminate\View\View->getContents() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/View.php:118[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  51. Illuminate\View\Engines\CompilerEngine->get() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/View.php:147[m
+[32m+[m[32m[30-Aug-2017 19:03:03 Asia/tokyo] PHP  52. Illuminate\View\Engines\PhpEngine->evaluatePath() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php:58[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP Parse error:  syntax error, unexpected end of file in /home/ubuntu/workspace/microposts/storage/framework/views/1dda10752b13a710372f4a485f21660f on line 42[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP Stack trace:[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   1. {main}() /home/ubuntu/workspace/microposts/server.php:0[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   2. require_once() /home/ubuntu/workspace/microposts/server.php:21[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   3. Illuminate\Foundation\Http\Kernel->handle() /home/ubuntu/workspace/microposts/public/index.php:54[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   4. Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:87[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   5. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:122[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   6. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   7. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   8. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP   9. Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  10. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/CheckForMaintenanceMode.php:44[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  11. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  12. Illuminate\Cookie\Middleware\EncryptCookies->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  13. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php:59[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  14. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  15. Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  16. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php:37[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  17. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  18. Illuminate\Session\Middleware\StartSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  19. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:62[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  20. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  21. Illuminate\View\Middleware\ShareErrorsFromSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  22. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php:49[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  23. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  24. Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  25. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php:50[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  26. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  27. Illuminate\Foundation\Http\Kernel->Illuminate\Foundation\Http\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  28. Illuminate\Routing\Router->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:236[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  29. Illuminate\Routing\Router->dispatchToRoute() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:635[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  30. Illuminate\Routing\Router->runRouteWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:675[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  31. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:710[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  32. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  33. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  34. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  35. Illuminate\Routing\Router->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  36. Illuminate\Routing\Route->run() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:708[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  37. Illuminate\Routing\Route->runWithCustomDispatcher() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:134[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  38. Illuminate\Routing\ControllerDispatcher->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:203[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  39. Illuminate\Routing\ControllerDispatcher->callWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:69[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  40. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:114[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  41. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  42. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  43. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  44. Illuminate\Routing\ControllerDispatcher->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  45. Illuminate\Routing\Router->prepareResponse() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:113[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  46. Symfony\Component\HttpFoundation\Response->__construct() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:1229[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  47. Illuminate\Http\Response->setContent() /home/ubuntu/workspace/microposts/vendor/symfony/http-foundation/Response.php:202[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  48. Illuminate\View\View->render() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Http/Response.php:51[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  49. Illuminate\View\View->renderContents() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/View.php:83[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  50. Illuminate\View\View->getContents() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/View.php:118[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  51. Illuminate\View\Engines\CompilerEngine->get() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/View.php:147[m
+[32m+[m[32m[30-Aug-2017 19:03:18 Asia/tokyo] PHP  52. Illuminate\View\Engines\PhpEngine->evaluatePath() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php:58[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC) in /home/ubuntu/workspace/microposts/app/Http/Controllers/WelcomeController.php on line 50[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP Stack trace:[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   1. {main}() /home/ubuntu/workspace/microposts/server.php:0[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   2. require_once() /home/ubuntu/workspace/microposts/server.php:21[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   3. Illuminate\Foundation\Http\Kernel->handle() /home/ubuntu/workspace/microposts/public/index.php:54[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   4. Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:87[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   5. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:122[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   6. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   7. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   8. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP   9. Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  10. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/CheckForMaintenanceMode.php:44[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  11. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  12. Illuminate\Cookie\Middleware\EncryptCookies->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  13. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php:59[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  14. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  15. Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  16. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php:37[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  17. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  18. Illuminate\Session\Middleware\StartSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  19. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:62[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  20. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  21. Illuminate\View\Middleware\ShareErrorsFromSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  22. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php:49[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  23. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  24. Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  25. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php:50[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  26. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  27. Illuminate\Foundation\Http\Kernel->Illuminate\Foundation\Http\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  28. Illuminate\Routing\Router->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:236[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  29. Illuminate\Routing\Router->dispatchToRoute() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:635[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  30. Illuminate\Routing\Router->runRouteWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:675[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  31. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:710[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  32. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  33. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  34. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  35. Illuminate\Routing\Router->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  36. Illuminate\Routing\Route->run() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:708[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  37. Illuminate\Routing\Route->runWithCustomDispatcher() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:134[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  38. Illuminate\Routing\ControllerDispatcher->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:203[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  39. Illuminate\Routing\ControllerDispatcher->makeController() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:57[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  40. Illuminate\Foundation\Application->make() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:85[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  41. Illuminate\Container\Container->make() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:674[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  42. Illuminate\Container\Container->build() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:631[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  43. ReflectionClass->__construct() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  44. spl_autoload_call() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  45. Composer\Autoload\ClassLoader->loadClass() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:10:45 Asia/tokyo] PHP  46. Composer\Autoload\includeFile() /home/ubuntu/workspace/microposts/vendor/composer/ClassLoader.php:322[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC) in /home/ubuntu/workspace/microposts/app/Http/Controllers/WelcomeController.php on line 50[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP Stack trace:[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   1. {main}() /home/ubuntu/workspace/microposts/server.php:0[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   2. require_once() /home/ubuntu/workspace/microposts/server.php:21[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   3. Illuminate\Foundation\Http\Kernel->handle() /home/ubuntu/workspace/microposts/public/index.php:54[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   4. Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:87[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   5. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:122[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   6. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   7. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   8. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP   9. Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  10. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/CheckForMaintenanceMode.php:44[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  11. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  12. Illuminate\Cookie\Middleware\EncryptCookies->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  13. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php:59[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  14. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  15. Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  16. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php:37[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  17. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  18. Illuminate\Session\Middleware\StartSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  19. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:62[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  20. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  21. Illuminate\View\Middleware\ShareErrorsFromSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  22. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php:49[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  23. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  24. Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  25. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php:50[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  26. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  27. Illuminate\Foundation\Http\Kernel->Illuminate\Foundation\Http\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  28. Illuminate\Routing\Router->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:236[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  29. Illuminate\Routing\Router->dispatchToRoute() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:635[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  30. Illuminate\Routing\Router->runRouteWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:675[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  31. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:710[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  32. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  33. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  34. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  35. Illuminate\Routing\Router->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  36. Illuminate\Routing\Route->run() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:708[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  37. Illuminate\Routing\Route->runWithCustomDispatcher() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:134[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  38. Illuminate\Routing\ControllerDispatcher->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:203[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  39. Illuminate\Routing\ControllerDispatcher->makeController() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:57[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  40. Illuminate\Foundation\Application->make() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:85[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  41. Illuminate\Container\Container->make() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:674[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  42. Illuminate\Container\Container->build() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:631[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  43. ReflectionClass->__construct() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  44. spl_autoload_call() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  45. Composer\Autoload\ClassLoader->loadClass() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:11:14 Asia/tokyo] PHP  46. Composer\Autoload\includeFile() /home/ubuntu/workspace/microposts/vendor/composer/ClassLoader.php:322[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC) in /home/ubuntu/workspace/microposts/app/Http/Controllers/WelcomeController.php on line 50[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP Stack trace:[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   1. {main}() /home/ubuntu/workspace/microposts/server.php:0[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   2. require_once() /home/ubuntu/workspace/microposts/server.php:21[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   3. Illuminate\Foundation\Http\Kernel->handle() /home/ubuntu/workspace/microposts/public/index.php:54[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   4. Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:87[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   5. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:122[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   6. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   7. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   8. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP   9. Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  10. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/CheckForMaintenanceMode.php:44[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  11. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  12. Illuminate\Cookie\Middleware\EncryptCookies->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  13. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php:59[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  14. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  15. Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  16. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php:37[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  17. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  18. Illuminate\Session\Middleware\StartSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  19. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:62[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  20. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  21. Illuminate\View\Middleware\ShareErrorsFromSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  22. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php:49[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  23. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  24. Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  25. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php:50[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  26. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  27. Illuminate\Foundation\Http\Kernel->Illuminate\Foundation\Http\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  28. Illuminate\Routing\Router->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:236[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  29. Illuminate\Routing\Router->dispatchToRoute() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:635[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  30. Illuminate\Routing\Router->runRouteWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:675[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  31. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:710[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  32. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  33. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  34. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  35. Illuminate\Routing\Router->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  36. Illuminate\Routing\Route->run() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:708[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  37. Illuminate\Routing\Route->runWithCustomDispatcher() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:134[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  38. Illuminate\Routing\ControllerDispatcher->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:203[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  39. Illuminate\Routing\ControllerDispatcher->makeController() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:57[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  40. Illuminate\Foundation\Application->make() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:85[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  41. Illuminate\Container\Container->make() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Application.php:674[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  42. Illuminate\Container\Container->build() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:631[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  43. ReflectionClass->__construct() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  44. spl_autoload_call() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  45. Composer\Autoload\ClassLoader->loadClass() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Container/Container.php:741[m
+[32m+[m[32m[30-Aug-2017 19:14:33 Asia/tokyo] PHP  46. Composer\Autoload\includeFile() /home/ubuntu/workspace/microposts/vendor/composer/ClassLoader.php:322[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP Fatal error:  Class 'App\Http\Controllers\App\Micropost' not found in /home/ubuntu/workspace/microposts/app/Http/Controllers/MicropostsController.php on line 93[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP Stack trace:[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   1. {main}() /home/ubuntu/workspace/microposts/server.php:0[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   2. require_once() /home/ubuntu/workspace/microposts/server.php:21[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   3. Illuminate\Foundation\Http\Kernel->handle() /home/ubuntu/workspace/microposts/public/index.php:54[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   4. Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:87[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   5. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:122[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   6. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   7. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   8. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP   9. Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  10. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/CheckForMaintenanceMode.php:44[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  11. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  12. Illuminate\Cookie\Middleware\EncryptCookies->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  13. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php:59[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  14. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  15. Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  16. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php:37[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  17. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  18. Illuminate\Session\Middleware\StartSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  19. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php:62[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  20. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  21. Illuminate\View\Middleware\ShareErrorsFromSession->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  22. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php:49[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  23. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  24. Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  25. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php:50[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  26. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  27. Illuminate\Foundation\Http\Kernel->Illuminate\Foundation\Http\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  28. Illuminate\Routing\Router->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php:236[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  29. Illuminate\Routing\Router->dispatchToRoute() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:635[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  30. Illuminate\Routing\Router->runRouteWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:675[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  31. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:710[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  32. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  33. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  34. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  35. App\Http\Middleware\Authenticate->handle() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:124[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  36. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/app/Http/Middleware/Authenticate.php:45[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  37. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  38. Illuminate\Routing\Router->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  39. Illuminate\Routing\Route->run() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Router.php:708[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  40. Illuminate\Routing\Route->runWithCustomDispatcher() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:134[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  41. Illuminate\Routing\ControllerDispatcher->dispatch() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Route.php:203[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  42. Illuminate\Routing\ControllerDispatcher->callWithinStack() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:69[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  43. Illuminate\Pipeline\Pipeline->then() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:114[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  44. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  45. Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:103[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  46. call_user_func:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  47. Illuminate\Routing\ControllerDispatcher->Illuminate\Routing\{closure}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:139[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  48. Illuminate\Routing\ControllerDispatcher->call() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:112[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  49. Illuminate\Routing\Controller->callAction() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php:164[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  50. call_user_func_array:{/home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:256}() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:256[m
+[32m+[m[32m[30-Aug-2017 20:41:44 Asia/tokyo] PHP  51. App\Http\Controllers\MicropostsController->destroy() /home/ubuntu/workspace/microposts/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:256[m
+[1mdiff --git a/resources/views/users/show.blade.php b/resources/views/users/show.blade.php[m
+[1mindex 72372e6..7e20a7b 100644[m
+[1m--- a/resources/views/users/show.blade.php[m
+[1m+++ b/resources/views/users/show.blade.php[m
+[36m@@ -14,10 +14,13 @@[m
+         </aside>[m
+         <div class="col-xs-8">[m
+             <ul class="nav nav-tabs nav-justified">[m
+[31m-                <li><a href="#">Microposts</a></li>[m
+[32m+[m[32m                <li role="presentation" class="{{ Request::is('users/' . $user->id) ? 'active' : '' }}"><a href="{{ route('users.show', ['id' => $user->id]) }}">Microposts <span class="badge">{{ $count_microposts }}</span></a></li>[m
+                 <li><a href="#">Followings</a></li>[m
+                 <li><a href="#">Followers</a></li>[m
+             </ul>[m
+[32m+[m[32m            @if (count($microposts) > 0)[m
+[32m+[m[32m                @include('microposts.microposts', ['microposts' => $microposts])[m
+[32m+[m[32m            @endif[m
+         </div>[m
+     </div>[m
+ @endsection[m
+\ No newline at end of file[m
+[1mdiff --git a/resources/views/welcome.blade.php b/resources/views/welcome.blade.php[m
+[1mindex 07c37f6..1e9fc25 100644[m
+[1m--- a/resources/views/welcome.blade.php[m
+[1m+++ b/resources/views/welcome.blade.php[m
+[36m@@ -1,15 +1,30 @@[m
+ @extends('layouts.app')[m
+ [m
+ @section('content')[m
+[31m-    @if (Auth::check())[m
+[31m-        <?php $user =Auth::user(); ?>[m
+[31m-        {{ $user->name }}[m
+[32m+[m[41m    [m
+[32m+[m[32m   @if (Auth::check())[m
+[32m+[m[32m        <div class="row">[m
+[32m+[m[32m            <aside class="col-md-4">[m
+[32m+[m[32m                {!! Form::open(['route' => 'microposts.store']) !!}[m
+[32m+[m[32m                    <div class="form-group">[m
+[32m+[m[32m                        {!! Form::textarea('content', old('content'), ['class' => 'form-control', 'rows' => '5']) !!}[m
+[32m+[m[32m                    </div>[m
+[32m+[m[32m                    {!! Form::submit('Post', ['class' => 'btn btn-primary btn-block']) !!}[m
+[32m+[m[32m                {!! Form::close() !!}[m
+[32m+[m[32m            </aside>[m
+[32m+[m[32m            <div class="col-xs-8">[m
+[32m+[m[32m                @if (count($microposts) > 0)[m
+[32m+[m[32m                    @include('microposts.microposts', ['microposts' => $microposts])[m
+[32m+[m[32m                @endif[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m        </div>[m
+     @else[m
+         <div class="center jumbotron">[m
+             <div class="text-center">[m
+                 <h1>Welcome to the Microposts</h1>[m
+                 {!! link_to_route('signup.get', 'Sign up now!', null, ['class' => 'btn btn-lg btn-primary']) !!}[m
+             </div>[m
+[31m-        </div>[m
+[32m+[m[32m        </div>[m[41m  [m
+     @endif[m
+[31m-@endsection[m
+\ No newline at end of file[m
+[32m+[m[32m@endsection[m
+[41m+[m
