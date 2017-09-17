@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-class WelcomeController extends Controller
+class MicropostFavoriteController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,19 +16,8 @@ class WelcomeController extends Controller
      */
     public function index()
     {
-        $data = [];
-        if (\Auth::check()) {
-            $user = \Auth::user();
-            $microposts = $user->feed_microposts()->orderBy('created_at', 'desc')->paginate(10);
-
-            $data = [
-                'user' => $user,
-                'microposts' => $microposts,
-            ];
-        }
-        return view('welcome', $data);
+        //
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -46,9 +35,10 @@ class WelcomeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $micropost_id)
     {
-        //
+        \Auth::user()->favorite($micropost_id);
+        return redirect()->back();
     }
 
     /**
@@ -93,6 +83,7 @@ class WelcomeController extends Controller
      */
     public function destroy($id)
     {
-        //
+        \Auth::user()->unfavorite($id);
+        return redirect()->back();
     }
 }
